@@ -26,13 +26,15 @@ APP_LIBS_LIST = 0
 # List user's libraries here 
 # default = 0 = none
 #
-USER_LIBS_LIST = 0
+USER_LIBS_LIST = MAX6675_library NewliquidCrystal Wire Keypad ArduinoThread Time-master
 
 # List core, application and user's libraries to be excluded
 # For example, WiFi may crash on Arduino 1.0.2, Esplora on Arduino 1.0.3, Firmata on Teensy 3.0,
 #   OneWire on MPIDE 0023, HardwareSerial may conflict with MarlinSerial
 #
-#EXCLUDE_LIBS = Firmata WiFi Esplora OneWire Robot_Control Robot_Control/utility Robot_Motor
+#EXCLUDE_LIBS = Adafruit_Circuit_Playground Firmata FrequencyTimer2 LedControl MaxMatrix MD_MAX72XX PietteTech_DHT-8266-master Robot_Control SpacebrewYun Temboo Time-master TimerOne WiFi101 DS1307RTC
+
+#Firmata WiFi Esplora OneWire Robot_Control Robot_Control/utility Robot_Motor
 
 
 # Parameters
@@ -43,12 +45,12 @@ USER_LIBS_LIST = 0
 # BOARD_TAG is required
 # If not defined, error BOARD_TAG not defined
 #
-#BOARD_TAG  = mega2560
+BOARD_TAG  = leonardo
 
 # BOARD_PORT is optional
 # If not defined, BOARD_PORT = /dev/tty.usb* (default)
 #
-#BOARD_PORT = /dev/tty.usbmodem*
+BOARD_PORT = /dev/tty.usbmodem*
 
 # Xcode takes SKETCHBOOK_DIR from preferences.txt
 # If not defined, each IDE has its own SKETCHBOOK_DIR (default)

@@ -1,13 +1,9 @@
-#if defined(ARDUINO) // Arduino 1.8 specific
-#   include "Arduino.h"
-#else // error
-#   error Platform not defined
-#endif // end IDE
+#include <Wire.h>
+#include "Keypad_I2C.h"
+#include <Keypad.h>
 
 #include <max6675.h>
 #include <LiquidCrystal_I2C.h>
-#include <Wire.h>
-#include <Keypad.h>
 #include <Thread.h>
 #include <ThreadController.h>
 #include <Time.h>
@@ -29,23 +25,20 @@ Thread threadKeyboard          = Thread();
 Thread threadRun               = Thread();
 
 /****  KEYBOARD  *****/
-const byte numRows                = 4;
-const byte numCols                = 4;
-const byte rowPins[numRows]       = {10,9,8,7};
-const byte colPins[numCols]       = {6 ,5,4,1};
-const char keys[numRows][numCols] = { {'1','2','3','A'},{'4','5','6','B'}, {'7','8','9','C'}, {'*','0','#','D'} };
-const long m_day                  = 86400000;
-const long m_hour                 = 3600000;
-const long m_minute               = 60000;
-const long m_second               = 1000;
-Keypad myKeypad = Keypad(makeKeymap(keys), rowPins, colPins, numRows, numCols);
+const byte ROWS = 4; 
+const byte COLS = 4; 
+char keys[ROWS][COLS] = {{'1','2','3','A'},{'4','5','6','B'},{'7','8','9','C'},{'*','0','#','D'}};
+byte rowPins[ROWS] = {0,1,2,3}; 
+byte colPins[COLS] = {4,5,6,7};
+int i2caddress = 0x38;
+Keypad_I2C kpd = Keypad_I2C( makeKeymap(keys) , rowPins  , colPins  , ROWS        , COLS        , i2caddress, PCF8574);
 
 /**** LCD ************/
 LiquidCrystal_I2C lcd(0x27, 2, 4, 0, 4, 5, 6, 7, 3, POSITIVE);
 LcdController     lcdController  = LcdController(lcd);
 
 /**** TEMP  **********/
-MAX6675 thermocouple(13, 11,12);
+MAX6675 thermocouple(12, 11,10);
 double temp = 0.00;
 
 /**** ICONS **********/
@@ -64,6 +57,10 @@ int     ramp_index     = 0;
 boolean ramp_programed = false;
 
 /**** CLOCK  *********/
+const long m_day                  = 86400000;
+const long m_hour                 = 3600000;
+const long m_minute               = 60000;
+const long m_second               = 1000;
 int     set_clock_index = 0;
 byte    set_clock[7][3] = {{0,59,0},{0,59,0},{1,23,0},{1,7,0},{1,31,0},{1,12,0},{0,99,0}};
 TimerController timeController = TimerController(0x68);//
@@ -224,8 +221,9 @@ void runner(){
 }
 
 void controller() {
-    char keypressed = myKeypad.getKey();
+    char keypressed = kpd.getKey();
     if(keypressed != NO_KEY){
+        Serial.println(keypressed);      
         switch (status_menu) {
             case MAIN_SCREEN :
                 if (keypressed == 'B'|| keypressed == 'C' || keypressed == 'D') {
@@ -473,7 +471,7 @@ void setup() {
     lcdController.createChar(5,burn_icon);
     lcdController.createChar(6,calend_icon);
     threadKeyboard.onRun(controller);
-    threadKeyboard.setInterval(100);
+    threadKeyboard.setInterval(0);
     threadTemp.onRun(readTemp);
     threadTemp.setInterval(600);
     threadLCD.onRun(view);
@@ -481,13 +479,19 @@ void setup() {
     threadRun.onRun(runner);
     threadRun.setInterval(500);
     threadControl.add(&threadKeyboard);
-    threadControl.add(&threadTemp);
+    //threadControl.add(&threadTemp);
     threadControl.add(&threadLCD);
-    threadControl.add(&threadRun);
+    //threadControl.add(&threadRun);
     beep(200,buzzer);
-    myKeypad.setDebounceTime(10); //keyboard delay
+    kpd.begin();
+    kpd.setDebounceTime(10); //keyboard delay
+    Serial.println("Inicio");    
 }
 
 void loop(){
     threadControl.run();
+    // char keypressed = kpd.getKey();
+   // if(keypressed != NO_KEY){
+   //   Serial.println(keypressed);
+   // }
 }

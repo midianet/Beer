@@ -3,11 +3,11 @@
 #ifndef _TIMERCONTROLLER_h
 #define _TIMERCONTROLLER_h
 
-#if defined(ARDUINO) && ARDUINO >= 100
-#include "arduino.h"
-#else
-#include "WProgram.h"
-#endif
+//#if defined(ARDUINO) && ARDUINO >= 100
+//#include "arduino.h"
+//#else
+//#include "WProgram.h"
+//#endif
 #define byte uint8_t
 
 class TimerController {

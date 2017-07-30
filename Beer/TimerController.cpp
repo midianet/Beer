@@ -1,7 +1,7 @@
 #include <Time.h>
 #include <TimeLib.h>
 #include <Wire.h>
-#include <Arduino.h>
+//#include <Arduino.h>
 #include "TimerController.h"
 #define byte uint8_t
 

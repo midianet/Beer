@@ -38,7 +38,7 @@ LiquidCrystal_I2C lcd(0x27, 2, 4, 0, 4, 5, 6, 7, 3, POSITIVE);
 LcdController     lcdController  = LcdController(lcd);
 
 /**** TEMP  **********/
-MAX6675 thermocouple(12, 11,10);
+MAX6675 thermocouple(7,8,9);
 double temp = 0.00;
 
 /**** ICONS **********/
@@ -152,11 +152,11 @@ boolean readTimeInput(char key){
         beep(30,buzzer);
     }else if(key == '*'){
         int v = input_value.toInt();
-        Serial.print(v);
-        Serial.print("|");
-        Serial.print(set_clock[set_clock_index][0]);
-        Serial.print("|");
-        Serial.println(set_clock[set_clock_index][1]);
+//        Serial.print(v);
+//        Serial.print("|");
+//        Serial.print(set_clock[set_clock_index][0]);
+//        Serial.print("|");
+//        Serial.println(set_clock[set_clock_index][1]);
         if(v < set_clock[set_clock_index][0] || v > set_clock[set_clock_index][1]){
             input_value = "";
             lcdController.print("invalido!",0,4);
@@ -223,7 +223,7 @@ void runner(){
 void controller() {
     char keypressed = kpd.getKey();
     if(keypressed != NO_KEY){
-        Serial.println(keypressed);      
+        //Serial.println(keypressed);      
         switch (status_menu) {
             case MAIN_SCREEN :
                 if (keypressed == 'B'|| keypressed == 'C' || keypressed == 'D') {
@@ -457,7 +457,7 @@ void view() { //FUNCAO - ATUALIZA A TELA LCD
 }
 
 void setup() {
-    Serial.begin(9600);
+    //Serial.begin(9600);
     pinMode(buzzer, OUTPUT);
     pinMode(rele,   OUTPUT);
     digitalWrite(rele,LOW);
@@ -479,19 +479,15 @@ void setup() {
     threadRun.onRun(runner);
     threadRun.setInterval(500);
     threadControl.add(&threadKeyboard);
-    //threadControl.add(&threadTemp);
+    threadControl.add(&threadTemp);
     threadControl.add(&threadLCD);
-    //threadControl.add(&threadRun);
+    threadControl.add(&threadRun);
     beep(200,buzzer);
     kpd.begin();
     kpd.setDebounceTime(10); //keyboard delay
-    Serial.println("Inicio");    
+    //Serial.println("Inicio");    
 }
 
 void loop(){
     threadControl.run();
-    // char keypressed = kpd.getKey();
-   // if(keypressed != NO_KEY){
-   //   Serial.println(keypressed);
-   // }
 }

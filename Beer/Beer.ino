@@ -194,21 +194,31 @@ void runner(){
             ligarRele();
         }else{
             desligarRele();
+            if (run_start == 0){
+                run_start  = millis();
+            }    
         }
-        long current  = millis() - run_start;;
-        if(current / m_minute >= ramp_time[ramp_index] ){
-            ramp_index++;
-            run_start  = millis();
-            beep(200,buzzer);
-            beep(200,buzzer);
-        }
-        int days    =   current  / m_day;
-        int hours   = ( current  % m_day) / m_hour;
-        int minutes = ((current  % m_day) % m_hour) / m_minute ;
-        int seconds = (((current % m_day) % m_hour) % m_minute) / m_second;
-        run_hours   = twoDigits(hours);
-        run_minutes = twoDigits(minutes);
-        run_seconds = twoDigits(seconds);
+
+        if (run_start == 0){
+            run_hours   = "00";
+            run_minutes = "00";
+            run_seconds = "00";
+        }else{    
+            long current  = millis() - run_start;;
+            if(current / m_minute >= ramp_time[ramp_index] ){
+                ramp_index++;
+                run_start   = 0;
+                beep(200,buzzer);
+                beep(200,buzzer);
+            }
+            int days    =   current  / m_day;
+            int hours   = ( current  % m_day) / m_hour;
+            int minutes = ((current  % m_day) % m_hour) / m_minute ;
+            int seconds = (((current % m_day) % m_hour) % m_minute) / m_second;
+            run_hours   = twoDigits(hours);
+            run_minutes = twoDigits(minutes);
+            run_seconds = twoDigits(seconds);
+        }    
         //Serial.println(run_hours + ":"+ run_minutes + ":"+ run_seconds);
         if(ramp_index == ramp_size){
             clearScreen();

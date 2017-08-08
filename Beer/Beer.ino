@@ -66,6 +66,7 @@ byte    set_clock[7][3] = {{0,59,0},{0,59,0},{1,23,0},{1,7,0},{1,31,0},{1,12,0},
 TimerController timeController = TimerController(0x68);//
 
 /**** RUN  ***********/
+boolean cooking     = false;
 long    run_start   = 0;
 String  run_hours   = "00";
 String  run_minutes = "00";
@@ -75,6 +76,20 @@ String  input_value = "";
 
 void clearScreen() {
     lcdController.clear();
+}
+
+void cookingStart(){
+    boolean cooking = true;
+    run_start   = 0;
+    ramp_index  = 0;
+    ligaRele();
+}
+
+void cookingStop(){
+    boolean cooking = false;
+    run_start   = 0;
+    ramp_index  = 0;
+    desligaRele();
 }
 
 void beep(unsigned char delayms, unsigned char frequency, int pino){
@@ -189,7 +204,7 @@ String twoDigits(int value){
 }
 
 void runner(){
-    if(run_start > 0 ){
+    if(cooking){
         if(temp < ramp_temp[ramp_index]){
             ligarRele();
         }else{
@@ -198,7 +213,6 @@ void runner(){
                 run_start  = millis();
             }    
         }
-
         if (run_start == 0){
             run_hours   = "00";
             run_minutes = "00";
@@ -222,8 +236,7 @@ void runner(){
         //Serial.println(run_hours + ":"+ run_minutes + ":"+ run_seconds);
         if(ramp_index == ramp_size){
             clearScreen();
-            desligarRele();
-            run_start   = 0;
+            cookingStop();
             status_menu = FINISH_SCREEN;
         }
 
@@ -309,34 +322,21 @@ void controller() {
                 }
                 break;
             case PRE_RUN_SCREEN :
-                if(run_start == 0){
-                    if (keypressed == 'A'|| keypressed == 'B' || keypressed == 'C') {
-                        status_menu = keypressed == 'A' ? MAIN_SCREEN      : status_menu;
-                        status_menu = keypressed == 'B' ? NUM_RAMP_SCREEN  : status_menu;
-                        status_menu = keypressed == 'C' ? CLOCK_SCREEN     : status_menu;
-                        input_value = "";
-                        clearScreen();
-                        beep(200, buzzer);
-                    }
-                    if(keypressed == 'D' && ramp_programed){
-                        status_menu = RUN_SCREEN;
-                        ramp_index  = 0;
-                        run_start   = millis();
-                        ligarRele();
-                        beep(200, buzzer);
-                        beep(200, buzzer);
-                        beep(200, buzzer);
-                        clearScreen();
-                    }
-                }else{
-                    if(keypressed == 'D'){
-                        run_start  = 0;
-                        status_menu = MAIN_SCREEN;
-                        desligarRele();
-                        beep(200, buzzer);
-                        clearScreen();
-                    }
+                if (keypressed == 'A'|| keypressed == 'B' || keypressed == 'C') {
+                    status_menu = keypressed == 'A' ? MAIN_SCREEN      : status_menu;
+                    status_menu = keypressed == 'B' ? NUM_RAMP_SCREEN  : status_menu;
+                    status_menu = keypressed == 'C' ? CLOCK_SCREEN     : status_menu;
+                    input_value = "";
+                    clearScreen();
+                    beep(200, buzzer);
                 }
+                if(keypressed == 'D' && ramp_programed){
+                    status_menu = RUN_SCREEN;
+                    cookingStart();
+                    beep(200, buzzer);
+                    beep(200, buzzer);
+                    beep(200, buzzer);
+                    clearScreen();
                 break;
             case RUN_SCREEN :
                 if(keypressed == 'D'){
@@ -349,9 +349,7 @@ void controller() {
             case BREAK_SCREEN :
                 if(keypressed  == 'A'){
                     status_menu = MAIN_SCREEN;
-                    ramp_index  = 0;
-                    run_start   = 0;
-                    desligarRele();
+                    cookingStop()
                     beep(200, buzzer);
                     beep(200, buzzer);
                     beep(200, buzzer);
@@ -483,11 +481,11 @@ void setup() {
     threadKeyboard.onRun(controller);
     threadKeyboard.setInterval(0);
     threadTemp.onRun(readTemp);
-    threadTemp.setInterval(600);
+    threadTemp.setInterval(10000);
     threadLCD.onRun(view);
     threadLCD.setInterval(500);
     threadRun.onRun(runner);
-    threadRun.setInterval(500);
+    threadRun.setInterval(1000);
     threadControl.add(&threadKeyboard);
     threadControl.add(&threadTemp);
     threadControl.add(&threadLCD);

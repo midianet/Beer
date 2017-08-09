@@ -78,18 +78,28 @@ void clearScreen() {
     lcdController.clear();
 }
 
+void onRele() {
+    digitalWrite(rele, HIGH);
+    //.println("ligou  " + String(temp)  + " | " + String(ramp_temp[ramp_index]));
+}
+
+void offRele() {
+    digitalWrite(rele, LOW);
+    //Serial.println("desligou  " + String(temp)  + " | " + String(ramp_temp[ramp_index]));
+}
+
 void cookingStart(){
-    boolean cooking = true;
+    cooking = true;
     run_start   = 0;
     ramp_index  = 0;
-    ligaRele();
+    onRele();
 }
 
 void cookingStop(){
-    boolean cooking = false;
+    cooking = false;
     run_start   = 0;
     ramp_index  = 0;
-    desligaRele();
+    offRele();
 }
 
 void beep(unsigned char delayms, unsigned char frequency, int pino){
@@ -167,11 +177,6 @@ boolean readTimeInput(char key){
         beep(30,buzzer);
     }else if(key == '*'){
         int v = input_value.toInt();
-//        Serial.print(v);
-//        Serial.print("|");
-//        Serial.print(set_clock[set_clock_index][0]);
-//        Serial.print("|");
-//        Serial.println(set_clock[set_clock_index][1]);
         if(v < set_clock[set_clock_index][0] || v > set_clock[set_clock_index][1]){
             input_value = "";
             lcdController.print("invalido!",0,4);
@@ -189,16 +194,6 @@ void readTemp() { //FUNCAO - FAZ A LEITURA DO SENSOR DE TEMPERATURA
     temp = thermocouple.readCelsius();
 }
 
-void ligarRele() {
-    digitalWrite(rele, HIGH);
-    //.println("ligou  " + String(temp)  + " | " + String(ramp_temp[ramp_index]));
-}
-
-void desligarRele() {
-    digitalWrite(rele, LOW);
-    //Serial.println("desligou  " + String(temp)  + " | " + String(ramp_temp[ramp_index]));
-}
-
 String twoDigits(int value){
     return value < 10 ? "0" + String(value) : String(value);
 }
@@ -206,9 +201,9 @@ String twoDigits(int value){
 void runner(){
     if(cooking){
         if(temp < ramp_temp[ramp_index]){
-            ligarRele();
+            onRele();
         }else{
-            desligarRele();
+            offRele();
             if (run_start == 0){
                 run_start  = millis();
             }    
@@ -233,20 +228,20 @@ void runner(){
             run_minutes = twoDigits(minutes);
             run_seconds = twoDigits(seconds);
         }    
-        //Serial.println(run_hours + ":"+ run_minutes + ":"+ run_seconds);
         if(ramp_index == ramp_size){
             clearScreen();
             cookingStop();
             status_menu = FINISH_SCREEN;
         }
 
+    }else{
+      offRele();
     }
 }
 
 void controller() {
     char keypressed = kpd.getKey();
-    if(keypressed != NO_KEY){
-        //Serial.println(keypressed);      
+    if(keypressed != NO_KEY){   
         switch (status_menu) {
             case MAIN_SCREEN :
                 if (keypressed == 'B'|| keypressed == 'C' || keypressed == 'D') {
@@ -337,6 +332,7 @@ void controller() {
                     beep(200, buzzer);
                     beep(200, buzzer);
                     clearScreen();
+                }
                 break;
             case RUN_SCREEN :
                 if(keypressed == 'D'){
@@ -349,7 +345,7 @@ void controller() {
             case BREAK_SCREEN :
                 if(keypressed  == 'A'){
                     status_menu = MAIN_SCREEN;
-                    cookingStop()
+                    cookingStop();
                     beep(200, buzzer);
                     beep(200, buzzer);
                     beep(200, buzzer);
@@ -481,7 +477,7 @@ void setup() {
     threadKeyboard.onRun(controller);
     threadKeyboard.setInterval(0);
     threadTemp.onRun(readTemp);
-    threadTemp.setInterval(10000);
+    threadTemp.setInterval(5000);
     threadLCD.onRun(view);
     threadLCD.setInterval(500);
     threadRun.onRun(runner);
@@ -493,7 +489,8 @@ void setup() {
     beep(200,buzzer);
     kpd.begin();
     kpd.setDebounceTime(10); //keyboard delay
-    //Serial.println("Inicio");    
+    //Serial.println("Inicio");
+    readTemp();    
 }
 
 void loop(){
